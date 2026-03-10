@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pytest
+from fdtd1d import FDTD1D
 
 def gaussian(x, x0, sigma):
-    return np.exp(0.5 * ((x - x0)/sigma)**2)
+    return np.exp(-0.5 * ((x - x0)/sigma)**2)
 
 C = 1.0
 
