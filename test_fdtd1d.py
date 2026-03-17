@@ -54,7 +54,7 @@ def test_fdtd_PEC_boundary_conditions():
     h_expected = np.zeros_like(h_solved)
     
     assert np.corrcoef(e_solved, e_expected)[0,1] > 0.99
-    assert np.corrcoef(h_solved, h_expected)[0,1] > 0.99 
+    assert np.allclose(h_solved, h_expected, atol=0.01)
 
 
 def test_fdtd_periodic_boundary_conditions():
