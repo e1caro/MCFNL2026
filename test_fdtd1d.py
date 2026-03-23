@@ -21,7 +21,8 @@ def test_fdtd_solves_basic_propagation():
 
     e_solved = fdtd.get_e()
 
-    e_expected = 0.5 * gaussian(x, -t_final*C, sigma)      + 0.5 * gaussian(x, t_final*C, sigma)
+    e_expected = 0.5 * gaussian(x, -t_final*C, sigma) \
+     + 0.5 * gaussian(x, t_final*C, sigma)
 
 
     plt.plot(x, e_solved)
@@ -55,7 +56,6 @@ def test_fdtd_PEC_boundary_conditions():
     
     assert np.allclose(e_solved, e_expected)
     assert np.allclose(h_solved, h_expected)
-
 
 def test_fdtd_PMC_boundary_conditions():
     # Test
@@ -116,42 +116,28 @@ def test_fdtd_periodic_boundary_conditions():
 
 def test_fdtd_TF_SF():
     xMin, xMax = -1.0, 1.0
+    L = xMax - xMin
     x = np.linspace(xMin, xMax, 201)
-    boundaries = ('periodic', 'periodic')
-
+    x0 = 0.0
     sigma = 0.05
+    initial_e = gaussian(x, x0, sigma)
 
-    # Define incident and scattered initial fields
-    incident_e = gaussian(x, -0.3, sigma)
-    scattered_e = gaussian(x, 0.3, sigma)
-    total_e = incident_e + scattered_e
+    fdtd_incident = FDTD1D(x, boundaries=('periodic', 'periodic'))
+    fdtd_incident.load_initial_field(initial_e)
+    fdtd_incident.run_until(L / C)
+    e_incident = fdtd_incident.get_e()
+    h_incident = fdtd_incident.get_h()
 
-    t_final = 0.2
-
-    # Run incident wave
-    fdtd_incident = FDTD1D(x, boundaries)
-    fdtd_incident.load_initial_field(incident_e)
-    fdtd_incident.run_until(t_final)
-
-    # Run scattered wave
-    fdtd_scattered = FDTD1D(x, boundaries)
-    fdtd_scattered.load_initial_field(scattered_e)
-    fdtd_scattered.run_until(t_final)
-
-    # Run total wave (incident + scattered)
-    fdtd_total = FDTD1D(x, boundaries)
-    fdtd_total.load_initial_field(total_e)
-    fdtd_total.run_until(t_final)
-
+    fdtd_total = FDTD1D(x, boundaries=('PEC', 'PEC'))
+    fdtd_total.load_initial_field(initial_e)
+    fdtd_total.run_until(L / C)
     e_total = fdtd_total.get_e()
     h_total = fdtd_total.get_h()
 
-    e_sum = fdtd_incident.get_e() + fdtd_scattered.get_e()
-    h_sum = fdtd_incident.get_h() + fdtd_scattered.get_h()
+    e_scattered = e_total - e_incident
+    h_scattered = h_total - h_incident
 
-    assert np.allclose(e_total, e_sum, atol=1e-8)
-    assert np.allclose(h_total, h_sum, atol=1e-8)
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
+    np.testing.assert_allclose(e_incident, initial_e, atol=1e-2)
+    np.testing.assert_allclose(e_total, -initial_e, atol=1e-2)
+    np.testing.assert_allclose(e_scattered, -2.0 * initial_e, atol=1e-2)
+    np.testing.assert_allclose(h_scattered, -h_incident, atol=1e-2)
