@@ -13,7 +13,7 @@ class FDTD1D:
         self.x = x
         self.xH = (self.x[1:] + self.x[:-1]) / 2.0
         self.dx = x[1] - x[0]
-        self.dt = self.dx / C  
+        self.dt = self.dx/C
         self.N = len(x)
         self.e = np.zeros(self.N)
         self.h = np.zeros(self.N - 1) 
@@ -74,15 +74,6 @@ class FDTD1D:
         fig, ax = plt.subplots()
         for _ in range(n_steps):
             self._step()
-            ax.clear()  # Limpia el gráfico anterior
-            ax.plot(self.x, self.e, label = 'E')
-            ax.plot(self.xH, self.h, label = 'H')
-            ax.set_ylim(-1, 1)
-            ax.set_title(f"t={self.t}")
-            plt.legend()
-            plt.pause(0.0001)  # Pequeña pausa para animación
-        plt.ioff()
-        plt.show()
         self.t = t_final  
         
     def get_e(self):
